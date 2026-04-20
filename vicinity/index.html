@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vicinity — Find your people, wherever you are.</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230A0A0A'/%3E%3C/svg%3E">
+<meta name="description" content="Solo travel. Shared moments. Connect with travelers near you.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:ital,wght@0,200;0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ── */
+:root {
+  --ink: #0A0A0A;
+  --bg: #F7F3EE;
+  --bg2: #EDE8E0;
+  --bg3: #E3DDD5;
+  --muted: #9A9289;
+  --muted2: #C8C2BB;
+  --bdr: rgba(10,10,10,0.1);
+  --cream: #F7F3EE;
+  --accent: #5B4C3F;
+  --radius: 20px;
+  --transition: 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+[data-theme="dark"] {
+  --ink: #F0EBE3;
+  --bg: #0A0A0A;
+  --bg2: #141414;
+  --bg3: #1E1E1E;
+  --muted: #7A736C;
+  --muted2: #3A3530;
+  --bdr: rgba(247,243,238,0.09);
+  --cream: #F7F3EE;
+  --accent: #C8BFB5;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  overflow-x: hidden;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ── THEME TOGGLE ── */
+.theme-toggle {
+  position: fixed;
+  top: 24px;
+  right: 28px;
+  z-index: 1000;
+  width: 48px;
+  height: 26px;
+  background: var(--bdr);
+  border: 1px solid var(--bdr);
+  border-radius: 100px;
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  padding: 3px;
+}
+[data-theme="dark"] .theme-toggle { background: rgba(247,243,238,0.1); border-color: rgba(247,243,238,0.12); }
+.toggle-knob {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--ink);
+  transition: transform var(--transition), background var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+}
+[data-theme="light"] .toggle-knob { transform: translateX(22px); }
+
+/* ── SCROLL REVEAL ── */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.reveal-delay-1 { transition-delay: 0.1s; }
+.reveal-delay-2 { transition-delay: 0.22s; }
+.reveal-delay-3 { transition-delay: 0.34s; }
+.reveal-delay-4 { transition-delay: 0.46s; }
+.reveal-delay-5 { transition-delay: 0.58s; }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 80px 32px 60px;
+  position: relative;
+  overflow: hidden;
+}
+.hero-grain {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  opacity: 0.5;
+}
+[data-theme="dark"] .hero::before {
+  content: '';
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(200,185,170,0.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+[data-theme="light"] .hero::before {
+  content: '';
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  width: 700px;
+  height: 700px;
+  background: radial-gradient(circle, rgba(91,76,63,0.06) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.pin-icon {
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 28px;
+  opacity: 0; animation: fadeUp 1s ease 0.2s forwards;
+}
+.pin-shape {
+  width: 36px; height: 36px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 1.5px solid var(--muted);
+  display: flex; align-items: center; justify-content: center;
+}
+.pin-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  transform: rotate(45deg);
+}
+.wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(52px, 11vw, 96px);
+  font-weight: 300;
+  letter-spacing: 14px;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin-bottom: 18px;
+  opacity: 0; animation: fadeUp 1s ease 0.4s forwards;
+  transition: color var(--transition);
+}
+.tagline-wrap {
+  height: 20px;
+  margin-bottom: 52px;
+  opacity: 0; animation: fadeUp 1s ease 0.6s forwards;
+}
+.tagline {
+  font-size: 10px;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  transition: opacity 0.4s;
+}
+.store-buttons {
+  display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+  opacity: 0; animation: fadeUp 1s ease 0.85s forwards;
+}
+.store-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 15px 28px;
+  border: 1px solid var(--bdr);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--ink);
+  text-decoration: none;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+.store-btn:hover {
+  background: var(--bg3);
+  border-color: var(--muted);
+  transform: translateY(-2px);
+}
+.store-btn svg { width: 22px; height: 22px; flex-shrink: 0; }
+.store-btn-sub { font-size: 8px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); display: block; }
+.store-btn-main { font-size: 14px; font-weight: 400; color: var(--ink); }
+.scroll-hint {
+  position: absolute; bottom: 32px;
+  font-size: 8px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--muted);
+  opacity: 0; animation: fadeUp 1s ease 1.4s forwards;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+}
+.scroll-hint::after { content: ''; display: block; width: 1px; height: 28px; background: var(--muted); }
+
+/* ── SECTION LABELS ── */
+.section-eyebrow {
+  font-size: 9px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 14px;
+}
+.section-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(38px, 7vw, 72px);
+  font-weight: 300;
+  line-height: 1.05;
+  color: var(--ink);
+  margin-bottom: 20px;
+  transition: color var(--transition);
+}
+.section-body {
+  font-size: 14px; line-height: 1.85;
+  color: var(--muted); max-width: 480px;
+}
+
+/* ── FEATURE STRIP ── */
+.feature-strip {
+  padding: 60px 0 40px;
+  display: flex;
+  justify-content: center;
+  gap: 0;
+  border-top: 1px solid var(--bdr);
+  border-bottom: 1px solid var(--bdr);
+  transition: border-color var(--transition);
+}
+.feature-stat {
+  flex: 1;
+  text-align: center;
+  padding: 28px 24px;
+  border-right: 1px solid var(--bdr);
+  max-width: 220px;
+  transition: border-color var(--transition);
+}
+.feature-stat:last-child { border-right: none; }
+.stat-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 52px; font-weight: 300;
+  color: var(--ink); line-height: 1;
+  margin-bottom: 6px;
+  transition: color var(--transition);
+}
+.stat-lbl { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--muted); }
+
+/* ── SCREENS SECTION ── */
+.screens-section {
+  padding: 120px 40px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.screens-intro {
+  max-width: 560px;
+  margin-bottom: 80px;
+}
+
+/* ── PHONE MOCKUP BASE ── */
+.phone-frame {
+  width: 260px;
+  height: 520px;
+  background: var(--bg2);
+  border-radius: 38px;
+  border: 1.5px solid var(--bdr);
+  overflow: hidden;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.15), 0 0 0 1px rgba(255,255,255,0.03);
+  position: relative;
+  flex-shrink: 0;
+  transition: background var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+[data-theme="dark"] .phone-frame {
+  background: #161616;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04);
+}
+.phone-status {
+  height: 38px; display: flex; align-items: center;
+  justify-content: space-between; padding: 0 20px;
+  font-size: 11px; font-weight: 500; color: var(--ink);
+  flex-shrink: 0; position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  transition: color var(--transition);
+}
+.phone-status.lite { color: #fff; }
+.phone-status-i { font-size: 8px; letter-spacing: 2px; opacity: 0.5; }
+
+/* ── SCREEN SHOWCASE GRID ── */
+.screens-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px 48px;
+}
+.screen-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 28px;
+}
+.screen-item.reverse {
+  flex-direction: column-reverse;
+}
+.screen-item-text { max-width: 340px; }
+.screen-item-tag {
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--bg3);
+  border: 1px solid var(--bdr);
+  border-radius: 100px;
+  padding: 5px 14px;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+  margin-bottom: 14px;
+  transition: background var(--transition), border-color var(--transition);
+}
+.screen-item-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 32px; font-weight: 300;
+  color: var(--ink); line-height: 1.1;
+  margin-bottom: 12px;
+  transition: color var(--transition);
+}
+.screen-item-body {
+  font-size: 13px; line-height: 1.8; color: var(--muted);
+}
+
+/* ── SCREEN: MAP ── */
+.mock-map-full {
+  position: absolute; inset: 0;
+  background: #1d2026;
+  overflow: hidden;
+}
+[data-theme="light"] .mock-map-full { background: #e8e4dc; }
+.map-grid {
+  position: absolute; inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+[data-theme="light"] .map-grid {
+  background-image:
+    linear-gradient(rgba(0,0,0,0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.06) 1px, transparent 1px);
+}
+.map-road { position: absolute; background: rgba(255,255,255,0.07); border-radius: 4px; }
+[data-theme="light"] .map-road { background: rgba(0,0,0,0.08); }
+.map-road-h { height: 2px; width: 100%; }
+.map-road-v { width: 2px; height: 100%; }
+
+.map-pin-wrap { position: absolute; display: flex; flex-direction: column; align-items: center; }
+.map-pin-label {
+  background: #0A0A0A;
+  color: #F7F3EE;
+  font-size: 7px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 9px; border-radius: 100px;
+  margin-bottom: 3px; white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+[data-theme="light"] .map-pin-label { background: #1A1A1A; }
+.map-pin-av {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 2px solid #0A0A0A;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 15px; font-weight: 400; color: #0A0A0A;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+}
+.map-pin-tail { width: 2px; height: 7px; background: #0A0A0A; }
+.map-pin-dot { width: 4px; height: 4px; border-radius: 50%; background: #0A0A0A; }
+.map-me .map-pin-label { background: var(--muted); }
+.map-me .map-pin-av { border-color: var(--muted); color: var(--muted); }
+.map-me .map-pin-tail, .map-me .map-pin-dot { background: var(--muted); }
+.map-pill {
+  position: absolute; top: 46px; left: 50%; transform: translateX(-50%);
+  background: rgba(10,10,10,0.85); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 100px; padding: 7px 16px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(247,243,238,0.6); white-space: nowrap;
+}
+[data-theme="light"] .map-pill {
+  background: rgba(247,243,238,0.9);
+  border-color: rgba(0,0,0,0.08);
+  color: #5B4C3F;
+}
+.map-tray {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: var(--bg2);
+  border-top: 1px solid var(--bdr);
+  padding: 12px 14px 14px;
+  transition: background var(--transition), border-color var(--transition);
+}
+.map-tray-lbl { font-size: 7px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 9px; }
+.map-tray-row { display: flex; gap: 9px; }
+.tray-card {
+  width: 76px; flex-shrink: 0;
+  background: var(--bg3);
+  border: 1px solid var(--bdr);
+  border-radius: 12px; overflow: hidden;
+  transition: background var(--transition), border-color var(--transition);
+}
+.tray-card-img {
+  height: 46px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 18px; color: var(--muted);
+}
+.tray-card-info { padding: 5px 7px; }
+.tray-card-name { font-size: 8px; color: var(--ink); transition: color var(--transition); }
+.tray-card-dist { font-size: 7px; color: var(--muted); margin-top: 1px; }
+
+/* ── SCREEN: PROFILE ── */
+.mock-profile {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+}
+.profile-img-area {
+  height: 55%;
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.profile-img-bg {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 88px;
+  color: rgba(10,10,10,0.06);
+  font-weight: 300;
+}
+.profile-grad {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  height: 200px;
+  background: linear-gradient(to top, rgba(10,10,10,0.7), transparent);
+}
+[data-theme="light"] .profile-grad {
+  background: linear-gradient(to top, rgba(237,232,224,0.9), transparent);
+}
+.profile-name-wrap { position: absolute; bottom: 14px; left: 18px; right: 18px; z-index: 2; }
+.profile-name { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 300; color: #fff; line-height: 1; }
+[data-theme="light"] .profile-name { color: #0A0A0A; }
+.profile-loc { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: rgba(255,255,255,0.55); margin-top: 4px; }
+[data-theme="light"] .profile-loc { color: var(--muted); }
+.profile-body { flex: 1; background: var(--bg2); padding: 14px 16px; overflow: hidden; transition: background var(--transition); }
+.profile-compat {
+  display: flex; align-items: center; gap: 12px;
+  background: var(--bg3); border-radius: 12px; padding: 10px 14px; margin-bottom: 12px;
+  transition: background var(--transition);
+}
+.compat-score { font-family: 'Cormorant Garamond', serif; font-size: 30px; font-weight: 300; color: var(--ink); transition: color var(--transition); }
+.compat-lbl { font-size: 9px; color: var(--muted); line-height: 1.5; }
+.profile-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+.profile-tag {
+  padding: 4px 10px; border: 1px solid var(--bdr);
+  border-radius: 100px; font-size: 8px; color: var(--ink);
+  transition: color var(--transition), border-color var(--transition);
+}
+.profile-actions { display: flex; gap: 8px; }
+.profile-pass {
+  flex: 1; height: 38px; border: 1px solid var(--bdr);
+  border-radius: 100px; background: transparent;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+}
+.profile-connect {
+  flex: 2; height: 38px; background: var(--ink);
+  border: none; border-radius: 100px;
+  font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--bg);
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ── SCREEN: CHAT ── */
+.mock-chat {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  background: var(--bg2); overflow: hidden;
+  transition: background var(--transition);
+}
+.chat-hdr {
+  display: flex; align-items: center; gap: 10px;
+  padding: 46px 14px 12px;
+  border-bottom: 1px solid var(--bdr);
+  background: var(--bg2);
+  transition: background var(--transition), border-color var(--transition);
+}
+.chat-av {
+  width: 36px; height: 36px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Cormorant Garamond', serif; font-size: 15px;
+  border: 1px solid var(--bdr);
+  color: var(--ink); overflow: hidden;
+  transition: border-color var(--transition), color var(--transition);
+}
+.chat-name { font-size: 13px; color: var(--ink); transition: color var(--transition); }
+.chat-sub { font-size: 8px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 1px; }
+.chat-msgs { flex: 1; padding: 14px 13px; display: flex; flex-direction: column; gap: 8px; overflow: hidden; }
+.chat-msg {
+  max-width: 72%; padding: 10px 13px;
+  font-size: 11px; line-height: 1.5; border-radius: 14px;
+}
+.chat-msg.them {
+  background: var(--bg3); color: var(--ink);
+  align-self: flex-start; border-bottom-left-radius: 4px;
+  transition: background var(--transition), color var(--transition);
+}
+.chat-msg.me {
+  background: var(--ink); color: var(--bg);
+  align-self: flex-end; border-bottom-right-radius: 4px;
+  transition: background var(--transition), color var(--transition);
+}
+.chat-msg-t { font-size: 7px; color: var(--muted); }
+.chat-msg-t.r { align-self: flex-end; }
+.chat-msg-t.l { align-self: flex-start; }
+.chat-input-row {
+  display: flex; gap: 8px; padding: 10px 12px;
+  border-top: 1px solid var(--bdr);
+  transition: border-color var(--transition);
+}
+.chat-inp {
+  flex: 1; background: var(--bg3);
+  border: none; border-radius: 100px;
+  padding: 9px 14px;
+  font-size: 11px; color: var(--ink);
+  transition: background var(--transition), color var(--transition);
+}
+.chat-send {
+  width: 36px; height: 36px;
+  background: var(--ink); border: none; border-radius: 50%;
+  color: var(--bg); font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ── SCREEN: DISCOVER / ITINERARY ── */
+.mock-discover {
+  position: absolute; inset: 0;
+  background: var(--bg2); overflow: hidden;
+  display: flex; flex-direction: column;
+  transition: background var(--transition);
+}
+.discover-hdr {
+  padding: 42px 16px 12px;
+  border-bottom: 1px solid var(--bdr);
+  transition: border-color var(--transition);
+}
+.discover-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 300; color: var(--ink);
+  transition: color var(--transition);
+}
+.discover-sub { font-size: 8px; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.discover-body { flex: 1; padding: 14px 14px; display: flex; flex-direction: column; gap: 10px; overflow: hidden; }
+.tp-city-row {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 12px; background: var(--bg3);
+  border: 1px solid var(--bdr); border-radius: 12px;
+  transition: background var(--transition), border-color var(--transition);
+}
+.tp-city-emoji { font-size: 16px; }
+.tp-city-nm { font-family: 'Cormorant Garamond', serif; font-size: 14px; color: var(--ink); transition: color var(--transition); }
+.tp-city-meta { font-size: 7px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); margin-top: 1px; }
+.tp-city-price {
+  margin-left: auto;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; color: var(--ink);
+  transition: color var(--transition);
+}
+.disc-plan-card {
+  background: var(--bg3); border: 1px solid var(--bdr);
+  border-radius: 12px; padding: 12px 13px;
+  margin-top: 4px;
+  transition: background var(--transition), border-color var(--transition);
+}
+.disc-plan-lbl { font-size: 7px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+.disc-plan-inp {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; color: var(--muted);
+  border-bottom: 1px solid var(--bdr); padding-bottom: 7px; margin-bottom: 8px;
+  transition: color var(--transition), border-color var(--transition);
+}
+.disc-plan-btn {
+  width: 100%; height: 34px; background: var(--ink);
+  border: none; border-radius: 100px;
+  font-size: 7px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--bg);
+  transition: background var(--transition), color var(--transition);
+}
+
+/* ── SCREEN: ONBOARDING ── */
+.mock-onboard {
+  position: absolute; inset: 0;
+  background: #0A0A0A;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-start;
+  padding: 52px 26px 28px;
+  overflow: hidden;
+}
+.ob-pin { margin-bottom: 20px; }
+.ob-pin-s {
+  width: 28px; height: 28px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 1.5px solid rgba(247,243,238,0.35);
+}
+.ob-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 38px; font-weight: 300;
+  letter-spacing: 8px; text-transform: uppercase;
+  color: #F7F3EE; margin-bottom: 8px;
+}
+.ob-tag {
+  font-size: 8px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(247,243,238,0.3); margin-bottom: 40px; text-align: center;
+}
+.ob-btn {
+  width: 100%; height: 46px; border-radius: 100px;
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  cursor: pointer; margin-bottom: 9px;
+  font-family: 'DM Sans', sans-serif;
+}
+.ob-fill { background: #F7F3EE; color: #0A0A0A; border: none; }
+.ob-out { background: transparent; border: 1px solid rgba(247,243,238,0.2); color: rgba(247,243,238,0.5); }
+.ob-legal { font-size: 8px; color: rgba(247,243,238,0.18); text-align: center; margin-top: 16px; line-height: 1.7; }
+
+/* ── BOTTOM NAV (shared) ── */
+.mock-bnav {
+  display: flex; justify-content: space-around; align-items: center;
+  padding: 8px 0 16px;
+  border-top: 1px solid var(--bdr);
+  background: var(--bg2);
+  position: absolute; bottom: 0; left: 0; right: 0;
+  transition: background var(--transition), border-color var(--transition);
+}
+.mock-bnav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.mock-bnav-ico { font-size: 14px; color: var(--muted); }
+.mock-bnav-lbl { font-size: 5px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.mock-bnav-item.act .mock-bnav-ico { color: var(--ink); }
+.mock-bnav-item.act .mock-bnav-lbl { color: var(--ink); }
+
+/* ── ABOUT SECTION ── */
+.about-section {
+  padding: 140px 60px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+  align-items: center;
+}
+.about-text .section-body { margin-bottom: 32px; }
+.about-quote {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 26px; font-style: italic; font-weight: 300;
+  color: var(--ink); line-height: 1.55;
+  padding: 28px 0 28px 24px;
+  border-left: 2px solid var(--muted);
+  margin: 28px 0;
+  transition: color var(--transition);
+}
+.about-team-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+}
+.team-card {
+  background: var(--bg2);
+  border: 1px solid var(--bdr);
+  border-radius: 16px; padding: 20px;
+  transition: background var(--transition), border-color var(--transition);
+}
+.team-initial {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px; font-weight: 300; color: var(--muted);
+  line-height: 1; margin-bottom: 10px;
+}
+.team-name { font-size: 12px; color: var(--ink); margin-bottom: 2px; transition: color var(--transition); }
+.team-role { font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--muted); }
+.about-values { display: flex; flex-direction: column; gap: 0; }
+.value-row {
+  display: flex; align-items: flex-start; gap: 18px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--bdr);
+  transition: border-color var(--transition);
+}
+.value-row:first-child { border-top: 1px solid var(--bdr); }
+.value-num {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 14px; color: var(--muted); padding-top: 2px; flex-shrink: 0;
+}
+.value-title { font-size: 13px; color: var(--ink); margin-bottom: 4px; transition: color var(--transition); }
+.value-body { font-size: 11px; color: var(--muted); line-height: 1.7; }
+
+/* ── BRANDING SECTION ── */
+.branding-section {
+  padding: 100px 60px;
+  border-top: 1px solid var(--bdr);
+  max-width: 1100px;
+  margin: 0 auto;
+  transition: border-color var(--transition);
+}
+.branding-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
+  margin-top: 60px;
+}
+.brand-card {
+  background: var(--bg2);
+  border: 1px solid var(--bdr);
+  border-radius: 20px;
+  padding: 28px;
+  transition: background var(--transition), border-color var(--transition);
+}
+.brand-card-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--muted); margin-bottom: 20px; }
+.swatch-row { display: flex; gap: 8px; }
+.swatch {
+  width: 36px; height: 36px; border-radius: 10px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.swatch-info { font-size: 9px; color: var(--muted); margin-top: 12px; line-height: 1.8; }
+.type-sample {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 48px; font-weight: 300; letter-spacing: 5px;
+  text-transform: uppercase; color: var(--ink);
+  line-height: 1; margin-bottom: 10px;
+  transition: color var(--transition);
+}
+.type-pair {
+  font-size: 11px; color: var(--muted); line-height: 1.8;
+}
+.icon-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.icon-item {
+  aspect-ratio: 1;
+  background: var(--bg3);
+  border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px;
+  transition: background var(--transition);
+}
+.icon-sym { font-size: 18px; color: var(--ink); transition: color var(--transition); }
+.icon-lbl { font-size: 7px; letter-spacing: 1px; text-transform: uppercase; color: var(--muted); }
+.brand-wordmark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 24px; font-weight: 300; letter-spacing: 7px;
+  text-transform: uppercase; color: var(--ink);
+  margin-bottom: 12px;
+  transition: color var(--transition);
+}
+.brand-logo-lockup { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+.brand-pin-sm {
+  width: 26px; height: 26px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  border: 1.5px solid var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  transition: border-color var(--transition);
+}
+.brand-pin-dot-sm {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--ink); transform: rotate(45deg);
+  transition: background var(--transition);
+}
+
+/* ── CTA SECTION ── */
+.cta-section {
+  padding: 140px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  border-top: 1px solid var(--bdr);
+  transition: border-color var(--transition);
+}
+[data-theme="dark"] .cta-section::before {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(200,185,170,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+[data-theme="light"] .cta-section::before {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(91,76,63,0.05) 0%, transparent 60%);
+  pointer-events: none;
+}
+.cta-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: clamp(44px, 8vw, 80px); font-weight: 300;
+  color: var(--ink); line-height: 1.1; margin-bottom: 20px;
+  transition: color var(--transition);
+}
+.cta-sub { font-size: 13px; color: var(--muted); margin-bottom: 48px; line-height: 1.7; max-width: 400px; margin-left: auto; margin-right: auto; }
+
+/* ── FOOTER ── */
+.footer {
+  padding: 40px 60px;
+  border-top: 1px solid var(--bdr);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 16px;
+  transition: border-color var(--transition);
+}
+.footer-logo {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 16px; letter-spacing: 5px; text-transform: uppercase;
+  color: var(--muted);
+}
+.footer-links { display: flex; gap: 24px; }
+.footer-links a {
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-links a:hover { color: var(--ink); }
+.footer-copy { font-size: 9px; letter-spacing: 1px; color: var(--muted); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── DIVIDER ── */
+.divider {
+  width: 1px; height: 80px;
+  background: var(--bdr); margin: 0 auto;
+  transition: background var(--transition);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .screens-grid { grid-template-columns: 1fr; gap: 60px; }
+  .about-section { grid-template-columns: 1fr; padding: 80px 32px; gap: 60px; }
+  .branding-grid { grid-template-columns: 1fr; }
+  .branding-section { padding: 80px 32px; }
+  .feature-strip { flex-wrap: wrap; }
+  .footer { padding: 32px; }
+}
+@media (max-width: 600px) {
+  .store-buttons { flex-direction: column; align-items: center; }
+  .store-btn { width: 220px; justify-content: center; }
+  .screens-section { padding: 80px 24px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── THEME TOGGLE ── -->
+<button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle theme" title="Toggle light/dark mode">
+  <div class="toggle-knob" id="toggleKnob">☽</div>
+</button>
+
+<!-- ══════════════════════════════ HERO ══════════════════════════════ -->
+<section class="hero">
+  <div class="hero-grain"></div>
+  <div class="pin-icon">
+    <div class="pin-shape"><div class="pin-dot"></div></div>
+  </div>
+  <h1 class="wordmark">Vicinity</h1>
+  <div class="tagline-wrap">
+    <div class="tagline" id="tagline"></div>
+  </div>
+  <div class="store-buttons" style="opacity:0;animation:fadeUp 1s ease 0.85s forwards;">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+      <div style="display:flex;gap:10px;align-items:center;">
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="color:var(--muted);"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+        <svg viewBox="0 0 24 24" fill="currentColor" width="18" height="18" style="color:var(--muted);"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-1.4l2.5 1.448a1 1 0 010 1.732L17.7 15.935l-2.467-2.467 2.467-2.16zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/></svg>
+      </div>
+      <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);">Coming soon to App Store &amp; Google Play</div>
+    </div>
+  </div>
+  <div class="scroll-hint">Scroll</div>
+</section>
+
+
+
+<!-- ══════════════════════════════ SCREENS SECTION ══════════════════════════════ -->
+<section class="screens-section">
+  <div class="screens-intro reveal">
+    <div class="section-eyebrow">The App</div>
+    <h2 class="section-title">Every screen, crafted for the moment.</h2>
+    <p class="section-body">From the moment you land, Vicinity puts like-minded travelers on your map — real people, real proximity, real connection.</p>
+  </div>
+
+  <div class="screens-grid">
+
+    <!-- ─ SCREEN 1: MAP / EXPLORE ─ -->
+    <div class="screen-item reveal reveal-delay-1">
+      <div class="phone-frame" style="height: 540px;">
+        <div class="phone-status lite">
+          <span style="font-size:12px;font-weight:500;">9:41</span>
+          <span class="phone-status-i">● ● ▲</span>
+        </div>
+        <div style="position:absolute;inset:0;">
+          <!-- MAP -->
+          <div class="mock-map-full">
+            <div class="map-grid"></div>
+            <div class="map-road map-road-h" style="top:38%;"></div>
+            <div class="map-road map-road-h" style="top:62%;"></div>
+            <div class="map-road map-road-v" style="left:32%;"></div>
+            <div class="map-road map-road-v" style="left:67%;"></div>
+            <!-- Radius circle suggestion -->
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:200px;height:200px;border-radius:50%;border:1px dashed rgba(255,255,255,0.08);pointer-events:none;"></div>
+            <!-- Map pill -->
+            <div class="map-pill">4 travelers nearby</div>
+            <!-- Pins -->
+            <div class="map-pin-wrap" style="left:52px;top:100px;">
+              <div class="map-pin-label">Emma</div>
+              <div class="map-pin-av" style="background:rgba(210,200,188,0.2);">E</div>
+              <div class="map-pin-tail"></div>
+              <div class="map-pin-dot"></div>
+            </div>
+            <div class="map-pin-wrap" style="left:148px;top:132px;">
+              <div class="map-pin-label">Sofia</div>
+              <div class="map-pin-av" style="background:rgba(195,182,170,0.2);">S</div>
+              <div class="map-pin-tail"></div>
+              <div class="map-pin-dot"></div>
+            </div>
+            <div class="map-pin-wrap" style="left:82px;top:200px;">
+              <div class="map-pin-label">Mia</div>
+              <div class="map-pin-av" style="background:rgba(205,193,183,0.2);">M</div>
+              <div class="map-pin-tail"></div>
+              <div class="map-pin-dot"></div>
+            </div>
+            <div class="map-pin-wrap map-me" style="left:118px;top:165px;">
+              <div class="map-pin-label">You</div>
+              <div class="map-pin-av" style="background:rgba(154,146,137,0.15);">✦</div>
+              <div class="map-pin-tail"></div>
+              <div class="map-pin-dot"></div>
+            </div>
+            <!-- Tray -->
+            <div class="map-tray" style="padding-bottom: 56px;">
+              <div class="map-tray-lbl">In your vicinity</div>
+              <div class="map-tray-row">
+                <div class="tray-card">
+                  <div class="tray-card-img" style="background:rgba(210,200,188,0.25);">E</div>
+                  <div class="tray-card-info"><div class="tray-card-name">Emma, 25</div><div class="tray-card-dist">0.3 km</div></div>
+                </div>
+                <div class="tray-card">
+                  <div class="tray-card-img" style="background:rgba(195,182,170,0.25);">S</div>
+                  <div class="tray-card-info"><div class="tray-card-name">Sofia, 27</div><div class="tray-card-dist">0.8 km</div></div>
+                </div>
+                <div class="tray-card">
+                  <div class="tray-card-img" style="background:rgba(205,193,183,0.25);">M</div>
+                  <div class="tray-card-info"><div class="tray-card-name">Mia, 22</div><div class="tray-card-dist">1.2 km</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Nav -->
+          <div class="mock-bnav">
+            <div class="mock-bnav-item act"><div class="mock-bnav-ico">◉</div><div class="mock-bnav-lbl">Explore</div></div>
+            <div class="mock-bnav-item"><div class="mock-bnav-ico">♡</div><div class="mock-bnav-lbl">Matches</div></div>
+            <div class="mock-bnav-item"><div class="mock-bnav-ico">✉</div><div class="mock-bnav-lbl">Chats</div></div>
+            <div class="mock-bnav-item"><div class="mock-bnav-ico">✦</div><div class="mock-bnav-lbl">Discover</div></div>
+            <div class="mock-bnav-item"><div class="mock-bnav-ico">○</div><div class="mock-bnav-lbl">Profile</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-item-text">
+        <div class="screen-item-tag">◉ Live Map</div>
+        <div class="screen-item-title">See who's<br>around you.</div>
+        <p class="screen-item-body">Vicinity puts real travelers on a live map. Pins show names and proximity — browse the tray, tap a pin, make a move. No swiping. No algorithms. Just people.</p>
+      </div>
+    </div>
+
+    <!-- ─ SCREEN 2: PROFILE ─ -->
+    <div class="screen-item reveal reveal-delay-2">
+      <div class="phone-frame" style="height: 540px;">
+        <div class="phone-status">
+          <span style="font-size:12px;font-weight:500;">9:41</span>
+          <span class="phone-status-i">● ● ▲</span>
+        </div>
+        <div class="mock-profile">
+          <div class="profile-img-area" style="background: linear-gradient(135deg, #c8bfb5 0%, #9a9289 50%, #6a6059 100%);">
+            <div class="profile-img-bg">S</div>
+            <div class="profile-grad"></div>
+            <div class="profile-name-wrap">
+              <div class="profile-name">Sofia, 27</div>
+              <div class="profile-loc">◎ Barcelona · 5 days</div>
+            </div>
+          </div>
+          <div class="profile-body">
+            <div class="profile-compat">
+              <div class="compat-score">88%</div>
+              <div class="compat-lbl">Travel compatibility<br><span style="font-size:8px;letter-spacing:1px;text-transform:uppercase;">AI-powered</span></div>
+            </div>
+            <div class="profile-tags">
+              <div class="profile-tag">Art & Culture</div>
+              <div class="profile-tag">Food</div>
+              <div class="profile-tag">Architecture</div>
+              <div class="profile-tag">Late nights</div>
+            </div>
+            <div class="profile-actions">
+              <button class="profile-pass">Pass</button>
+              <button class="profile-connect">Connect →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="screen-item-text">
+        <div class="screen-item-tag">✦ AI Matching</div>
+        <div class="screen-item-title">Deep profiles.<br>Real compatibility.</div>
+        <p class="screen-item-body">AI generates a travel compatibility score, a persona, and custom conversation starters for every pair. You know who someone is before you say hello.</p>
+      </div>
+    </div>
+
+    <!-- ─ SCREEN 3: CHAT ─ -->
+    <div class="screen-item reveal reveal-delay-1">
+      <div class="screen-item-text">
+        <div class="screen-item-tag">✉ Chat</div>
+        <div class="screen-item-title">Connect in the<br>same city.</div>
+        <p class="screen-item-body">Once matched, chat opens instantly. AI-suggested icebreakers mean you never start with a blank message — the first word is always easy.</p>
+      </div>
+      <div class="phone-frame" style="height: 540px;">
+        <div class="mock-chat">
+          <div class="chat-hdr">
+            <button style="font-size:16px;background:none;border:none;color:var(--muted);cursor:pointer;">←</button>
+            <div class="chat-av" style="background:rgba(195,182,170,0.3);">S</div>
+            <div>
+              <div class="chat-name">Sofia</div>
+              <div class="chat-sub">Barcelona · 0.8 km</div>
+            </div>
+          </div>
+          <div class="chat-msgs">
+            <div class="chat-msg them">Hey! Just matched — how long are you in Barcelona?</div>
+            <div class="chat-msg-t l">Just now</div>
+            <div class="chat-msg me">Until Thursday! It's only my second day here. What's one place you'd be upset to miss?</div>
+            <div class="chat-msg-t r">You · now</div>
+            <div class="chat-msg them">El Born quarter — there's a coffee place on Carrer del Rec, no sign outside, you'll miss it.</div>
+            <div class="chat-msg-t l">Just now</div>
+            <div class="chat-msg me">That's exactly my kind of place 😊 Want to meet there tomorrow morning?</div>
+            <div class="chat-msg-t r">You · now</div>
+          </div>
+          <div class="chat-input-row">
+            <div class="chat-inp" style="color:var(--muted);">Message…</div>
+            <div class="chat-send">→</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─ SCREEN 4: DISCOVER / TELEPORT ─ -->
+    <div class="screen-item reveal reveal-delay-2">
+      <div class="screen-item-text">
+        <div class="screen-item-tag">✦ Discover</div>
+        <div class="screen-item-title">Teleport. Plan.<br>Arrive ready.</div>
+        <p class="screen-item-body">Browse travelers in cities you haven't reached yet with Teleport. Then let AI craft a bespoke multi-day itinerary around your exact vibe and budget.</p>
+      </div>
+      <div class="phone-frame" style="height: 540px;">
+        <div class="mock-discover">
+          <div class="discover-hdr">
+            <div class="discover-title">Discover</div>
+            <div class="discover-sub">AI itineraries · Teleport</div>
+          </div>
+          <div class="discover-body">
+            <div style="font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px;">✦ Teleport to a city <span style="flex:1;height:1px;background:var(--bdr);display:block;"></span></div>
+            <div class="tp-city-row">
+              <div class="tp-city-emoji">🗼</div>
+              <div><div class="tp-city-nm">Tokyo</div><div class="tp-city-meta">Japan · 47 travelers</div></div>
+              <div class="tp-city-price">$4.99</div>
+            </div>
+            <div class="tp-city-row">
+              <div class="tp-city-emoji">🗼</div>
+              <div><div class="tp-city-nm">Paris</div><div class="tp-city-meta">France · 41 travelers</div></div>
+              <div class="tp-city-price">$2.99</div>
+            </div>
+            <div class="tp-city-row">
+              <div class="tp-city-emoji">🌴</div>
+              <div><div class="tp-city-nm">Bali</div><div class="tp-city-meta">Indonesia · 25 travelers</div></div>
+              <div class="tp-city-price">$1.99</div>
+            </div>
+            <div class="disc-plan-card">
+              <div class="disc-plan-lbl">Plan a trip</div>
+              <div class="disc-plan-inp">e.g. Kyoto, Cape Town…</div>
+              <button class="disc-plan-btn">Generate Itinerary ✦</button>
+            </div>
+          </div>
+          <div class="mock-bnav" style="position:relative;bottom:auto;">
+            <div class="mock-bnav-item"><div class="mock-bnav-ico">◉</div><div class="mock-bnav-lbl">Explore</div></div>
+            <div class="mock-bnav-item"><div class="mock-bnav-ico">♡</div><div class="mock-bnav-lbl">Matches</div></div>
+            <div class="mock-bnav-item"><div class="mock-bnav-ico">✉</div><div class="mock-bnav-lbl">Chats</div></div>
+            <div class="mock-bnav-item act"><div class="mock-bnav-ico">✦</div><div class="mock-bnav-lbl">Discover</div></div>
+            <div class="mock-bnav-item"><div class="mock-bnav-ico">○</div><div class="mock-bnav-lbl">Profile</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /screens-grid -->
+</section>
+
+<!-- ══════════════════════════════ ABOUT SECTION ══════════════════════════════ -->
+<section class="about-section" id="about">
+
+  <div class="about-text">
+    <div class="section-eyebrow reveal">About Vicinity</div>
+    <h2 class="section-title reveal">Built by travelers,<br>for travelers.</h2>
+    <div class="about-quote reveal">"The most meaningful moments of solo travel happen when a stranger becomes a companion. We built Vicinity to make that happen more often."</div>
+    <p class="section-body reveal">We're a small team of designers, engineers, and serial solo travelers who got tired of eating dinner alone in extraordinary cities. Vicinity is the product we always wanted.</p>
+    <div class="about-team-grid" style="margin-top:32px;">
+      <div class="team-card reveal reveal-delay-1">
+        <div class="team-initial">G</div>
+        <div class="team-name">Gunant Singh Pahwa</div>
+        <div class="team-role">CTO &amp; Founder</div>
+      </div>
+      <div class="team-card reveal reveal-delay-2">
+        <div class="team-initial">F</div>
+        <div class="team-name">Faisal Shanaa</div>
+        <div class="team-role">Co-Founder &amp; Head of Design</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="about-values reveal reveal-delay-1">
+    <div class="section-eyebrow" style="margin-bottom:24px;">What we believe</div>
+    <div class="value-row">
+      <div class="value-num">01</div>
+      <div>
+        <div class="value-title">Proximity is everything</div>
+        <div class="value-body">The best travel connections happen when two people are already in the same place. We put geography first, always.</div>
+      </div>
+    </div>
+    <div class="value-row">
+      <div class="value-num">02</div>
+      <div>
+        <div class="value-title">No swiping, no games</div>
+        <div class="value-body">Vicinity is not a dating app. It's a place to meet fellow travelers — curious, open, and already in your city.</div>
+      </div>
+    </div>
+    <div class="value-row">
+      <div class="value-num">03</div>
+      <div>
+        <div class="value-title">Safety is non-negotiable</div>
+        <div class="value-body">16+ only. Verified accounts. One-tap report and block. We moderate aggressively because trust is the product.</div>
+      </div>
+    </div>
+    <div class="value-row">
+      <div class="value-num">04</div>
+      <div>
+        <div class="value-title">AI as a quiet assistant</div>
+        <div class="value-body">Our AI writes your persona, suggests icebreakers, and crafts itineraries. It never decides for you — it just makes the first step easier.</div>
+      </div>
+    </div>
+  </div>
+
+</section>
+
+<!-- ══════════════════════════════ BRANDING ══════════════════════════════ -->
+<div style="border-top:1px solid var(--bdr);transition:border-color var(--transition);">
+<section class="branding-section">
+  <div class="reveal">
+    <div class="section-eyebrow">Brand Identity</div>
+    <h2 class="section-title" style="font-size:clamp(32px,5vw,60px);">The Vicinity language.</h2>
+  </div>
+  <div class="branding-grid">
+
+    <!-- Colors -->
+    <div class="brand-card reveal reveal-delay-1">
+      <div class="brand-card-title">Colour Palette</div>
+      <div class="swatch-row">
+        <div class="swatch" style="background:#0A0A0A;" title="Ink"></div>
+        <div class="swatch" style="background:#F7F3EE;" title="Cream"></div>
+        <div class="swatch" style="background:#EDE8E0;" title="Surface"></div>
+        <div class="swatch" style="background:#9A9289;" title="Muted"></div>
+        <div class="swatch" style="background:#5B4C3F;" title="Accent"></div>
+        <div class="swatch" style="background:#7C5CBF;" title="Teleport"></div>
+      </div>
+      <div class="swatch-info">
+        Ink · Cream · Surface · Muted · Accent · Teleport<br>
+        Near-black and warm off-white as dominant pair. Purple reserved exclusively for Teleport feature to signal paid access.
+      </div>
+    </div>
+
+    <!-- Typography -->
+    <div class="brand-card reveal reveal-delay-2">
+      <div class="brand-card-title">Typography</div>
+      <div class="type-sample">Vicinity</div>
+      <div class="type-pair">
+        <strong style="color:var(--ink);">Cormorant Garamond</strong> — Display, headers, names<br>
+        <em style="font-style:italic;">Refined, editorial, humanist.</em><br><br>
+        <strong style="color:var(--ink);">DM Sans</strong> — UI, labels, body copy<br>
+        <em style="font-style:italic;">Clean, geometric, functional.</em>
+      </div>
+    </div>
+
+    <!-- Logo / Icons -->
+    <div class="brand-card reveal reveal-delay-3">
+      <div class="brand-card-title">Logo & Iconography</div>
+      <div class="brand-logo-lockup">
+        <div class="brand-pin-sm"><div class="brand-pin-dot-sm"></div></div>
+        <div class="brand-wordmark">Vicinity</div>
+      </div>
+      <div class="icon-grid">
+        <div class="icon-item"><div class="icon-sym">◉</div><div class="icon-lbl">Explore</div></div>
+        <div class="icon-item"><div class="icon-sym">♡</div><div class="icon-lbl">Match</div></div>
+        <div class="icon-item"><div class="icon-sym">✉</div><div class="icon-lbl">Chat</div></div>
+        <div class="icon-item"><div class="icon-sym">✦</div><div class="icon-lbl">Discover</div></div>
+        <div class="icon-item"><div class="icon-sym">○</div><div class="icon-lbl">Profile</div></div>
+        <div class="icon-item"><div class="icon-sym">◎</div><div class="icon-lbl">Location</div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+</div>
+
+<!-- ══════════════════════════════ CTA ══════════════════════════════ -->
+<section class="cta-section">
+  <div class="section-eyebrow reveal">Coming Soon</div>
+  <div class="cta-title reveal">Your next connection<br><em>is already nearby.</em></div>
+  <p class="cta-sub reveal">Vicinity is launching soon. Be the first to know when we go live on the App Store and Google Play Store.</p>
+  <div class="reveal" style="display:flex;flex-direction:column;align-items:center;gap:14px;">
+    <div style="display:flex;gap:14px;align-items:center;opacity:0.5;">
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" style="color:var(--ink);"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.8-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+      <svg viewBox="0 0 24 24" fill="currentColor" width="22" height="22" style="color:var(--ink);"><path d="M3.609 1.814L13.792 12 3.61 22.186a.996.996 0 01-.61-.92V2.734a1 1 0 01.609-.92zm10.89 10.893l2.302 2.302-10.937 6.333 8.635-8.635zm3.199-1.4l2.5 1.448a1 1 0 010 1.732L17.7 15.935l-2.467-2.467 2.467-2.16zM5.864 2.658L16.8 8.99l-2.302 2.302-8.634-8.634z"/></svg>
+    </div>
+    <div style="font-size:9px;letter-spacing:3.5px;text-transform:uppercase;color:var(--muted);">Coming soon to App Store &amp; Google Play Store</div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════ FOOTER ══════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-logo">Vicinity</div>
+  <div class="footer-links">
+    <a href="#about">About</a>
+    <a href="#" onclick="openPrivacy();return false;">Privacy</a>
+    <a href="#" onclick="openPrivacy();return false;">Terms</a>
+  </div>
+  <div class="footer-copy">© 2026 Vicinity Inc.</div>
+</footer>
+
+<!-- ══════════════════════════════ PRIVACY POLICY MODAL ══════════════════════════════ -->
+<div id="privacyModal" style="display:none;position:fixed;inset:0;z-index:9999;overflow-y:auto;background:rgba(0,0,0,0.6);backdrop-filter:blur(8px);">
+  <div style="max-width:760px;margin:60px auto 60px;background:var(--bg2);border:1px solid var(--bdr);border-radius:24px;padding:56px 52px;position:relative;color:var(--ink);font-family:'DM Sans',sans-serif;font-weight:300;line-height:1.8;">
+    <button onclick="closePrivacy()" style="position:absolute;top:24px;right:28px;background:var(--bg3);border:1px solid var(--bdr);border-radius:100px;padding:6px 16px;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);cursor:pointer;">Close ✕</button>
+
+    <div style="font-size:9px;letter-spacing:4px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">Legal</div>
+    <h1 style="font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;margin-bottom:8px;color:var(--ink);">Privacy Policy</h1>
+    <p style="font-size:11px;color:var(--muted);margin-bottom:48px;">Last updated: April 15, 2026 &nbsp;·&nbsp; Vicinity Inc.</p>
+
+    <div style="border-top:1px solid var(--bdr);padding-top:36px;">
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">1. Introduction</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">Vicinity Inc. ("Vicinity," "we," "our," or "us") is committed to protecting the privacy and personal information of our users ("you" or "User"). This Privacy Policy describes how we collect, use, disclose, store, and protect your personal information when you use the Vicinity mobile application, website, and related services (collectively, the "Services"). By accessing or using our Services, you acknowledge that you have read, understood, and agree to the terms of this Privacy Policy. If you do not agree, please do not use our Services.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">2. Information We Collect</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">We collect information in the following categories:</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;"><strong style="color:var(--ink);font-weight:400;">2.1 Information You Provide Directly</strong><br>
+      When you create an account, complete your profile, or interact with our Services, we collect: your name, email address, date of birth (for age verification), profile photo, travel biography and interests, cities you have visited or plan to visit, and any content you submit including messages, posts, and itineraries.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;"><strong style="color:var(--ink);font-weight:400;">2.2 Location Information</strong><br>
+      Vicinity's core functionality relies on precise, real-time geolocation data. When you enable location services, we collect your GPS coordinates continuously while the app is in use. You may adjust location permissions in your device settings, but doing so will disable core features of the app. Location data is used solely to display your proximity to other users and is never sold to third parties.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;"><strong style="color:var(--ink);font-weight:400;">2.3 Device and Usage Information</strong><br>
+      We automatically collect: device identifiers (IDFA, GAID), IP address, operating system and version, app version, crash logs and diagnostic data, pages and features accessed, and timestamps of interactions.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;"><strong style="color:var(--ink);font-weight:400;">2.4 Communications</strong><br>
+      We retain messages exchanged between users on the platform for safety, moderation, and legal compliance purposes, as described in Section 5.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">3. How We Use Your Information</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">We use the information we collect to:</p>
+      <ul style="font-size:13px;color:var(--muted);margin-bottom:28px;padding-left:20px;display:flex;flex-direction:column;gap:6px;">
+        <li>Provide, operate, and improve the Services, including displaying nearby traveler profiles based on real-time location</li>
+        <li>Verify that users meet our minimum age requirement of 16 years</li>
+        <li>Generate AI-assisted profile personas, icebreaker suggestions, and travel itineraries</li>
+        <li>Send you service-related communications, account notifications, and (with your consent) promotional messages</li>
+        <li>Monitor for and enforce compliance with our Terms of Service and Community Guidelines</li>
+        <li>Detect fraud, investigate abuse, and respond to reports of harmful conduct</li>
+        <li>Comply with applicable laws, regulations, and legal process</li>
+        <li>Conduct analytics and research to improve user experience and safety systems</li>
+      </ul>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">4. Legal Bases for Processing (GDPR / PIPEDA)</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">Where applicable under the General Data Protection Regulation (GDPR), Canada's Personal Information Protection and Electronic Documents Act (PIPEDA), or similar legislation, we process your personal data on the following legal bases: (a) <em>Contract performance</em> — to deliver the Services you have registered for; (b) <em>Legitimate interests</em> — to ensure platform safety, prevent fraud, and improve our Services; (c) <em>Legal obligation</em> — to comply with applicable laws and respond to lawful requests; and (d) <em>Consent</em> — for optional features such as marketing communications and precise location sharing, which you may withdraw at any time.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">5. Data Retention</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">We retain your personal data for as long as your account is active or as necessary to provide you with our Services. Upon account deletion, we will delete or anonymize your data within 30 days, except where we are required to retain it for legal, regulatory, or safety reasons (e.g., records of reported abuse, fraudulent activity, or law enforcement requests), in which case data may be retained for up to 7 years. Location data is stored in identifiable form for no more than 90 days from collection, after which it is aggregated or deleted.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">6. Sharing and Disclosure</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">We do not sell your personal information. We may share your information with:</p>
+      <ul style="font-size:13px;color:var(--muted);margin-bottom:28px;padding-left:20px;display:flex;flex-direction:column;gap:6px;">
+        <li><strong style="color:var(--ink);font-weight:400;">Other Users:</strong> Your profile name, photo, approximate location (not precise coordinates), and bio are visible to other users of the platform within your configured proximity radius.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">Service Providers:</strong> We engage trusted third-party vendors for cloud hosting, analytics, fraud detection, and customer support who are contractually bound to process data only on our behalf and in accordance with applicable law.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">AI Infrastructure Partners:</strong> Anonymized, non-identifiable conversation snippets may be used to improve AI-generated features. No personally identifiable information is shared with AI model providers.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">Legal and Regulatory:</strong> We may disclose information to law enforcement, government authorities, or courts when required to do so by law, court order, or to protect the rights, property, or safety of Vicinity, our users, or the public.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">Business Transfers:</strong> In the event of a merger, acquisition, or asset sale, your data may be transferred to the acquiring entity, subject to the same privacy protections described herein.</li>
+      </ul>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">7. Data Security</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">We implement industry-standard technical and organizational security measures including TLS encryption in transit, AES-256 encryption at rest, access controls, and regular security audits. However, no method of transmission over the Internet or method of electronic storage is 100% secure. We cannot guarantee absolute security and are not responsible for unauthorized access resulting from your own actions, such as sharing your credentials.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">8. Children and Age Restrictions</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">Vicinity is strictly for users aged 16 and older. We do not knowingly collect personal information from individuals under 16. If we become aware that a user is under 16, we will immediately terminate their account and delete associated data. If you believe a minor has created an account, please contact us at privacy@vicinity.app. In jurisdictions where applicable law sets a higher age of digital consent (e.g., 18 in some regions), users must meet that local requirement.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">9. Your Rights and Choices</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">Depending on your jurisdiction, you may have the following rights regarding your personal data:</p>
+      <ul style="font-size:13px;color:var(--muted);margin-bottom:10px;padding-left:20px;display:flex;flex-direction:column;gap:6px;">
+        <li><strong style="color:var(--ink);font-weight:400;">Access:</strong> Request a copy of the personal data we hold about you.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">Rectification:</strong> Request correction of inaccurate or incomplete data.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">Erasure:</strong> Request deletion of your personal data, subject to legal retention obligations.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">Portability:</strong> Request your data in a structured, machine-readable format.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">Objection / Restriction:</strong> Object to or restrict certain processing activities.</li>
+        <li><strong style="color:var(--ink);font-weight:400;">Withdraw Consent:</strong> Withdraw consent for processing where consent is the legal basis.</li>
+      </ul>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">To exercise any of these rights, please contact us at privacy@vicinity.app. We will respond within 30 days. If you are in the European Economic Area, you have the right to lodge a complaint with your local supervisory authority.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">10. International Data Transfers</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">Vicinity operates globally. Your information may be transferred to and processed in countries other than the country in which you reside, including Canada, the United States, and other jurisdictions. Where required by law, we implement appropriate safeguards such as Standard Contractual Clauses (SCCs) approved by the European Commission to protect your data during international transfers.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">11. Cookies and Tracking Technologies</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">Our website uses cookies and similar technologies for analytics, security, and preferences. You may manage cookie preferences through your browser settings or our consent banner. Our mobile app does not use browser cookies but may use equivalent device-based identifiers for analytics and attribution, which you can limit through your device's privacy settings (e.g., "Limit Ad Tracking" on iOS or "Opt out of Ads Personalization" on Android).</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">12. Third-Party Links</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">Our Services may contain links to third-party websites or services. This Privacy Policy does not apply to those third parties, and we are not responsible for their privacy practices. We encourage you to review the privacy policies of any third-party services you access.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">13. Changes to This Policy</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:28px;">We may update this Privacy Policy from time to time to reflect changes in our practices, technology, legal requirements, or other factors. When we make material changes, we will notify you by updating the "Last updated" date at the top of this page and, where appropriate, by sending you an in-app notification or email. Your continued use of the Services after any changes constitutes your acceptance of the updated Privacy Policy.</p>
+
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:var(--ink);margin-bottom:12px;">14. Contact Us</h2>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:8px;">If you have any questions, concerns, or requests regarding this Privacy Policy or our data practices, please contact our Privacy Team at:</p>
+      <div style="background:var(--bg3);border:1px solid var(--bdr);border-radius:14px;padding:20px 24px;font-size:13px;color:var(--muted);line-height:2;">
+        <strong style="color:var(--ink);font-weight:400;">Vicinity Inc.</strong><br>
+        Privacy Team<br>
+        Email: privacy@vicinity.app<br>
+        For EU/EEA residents: dpo@vicinity.app (Data Protection Officer)
+      </div>
+
+    </div>
+
+    <div style="margin-top:48px;padding-top:28px;border-top:1px solid var(--bdr);font-size:10px;color:var(--muted);text-align:center;letter-spacing:1px;">
+      © 2026 Vicinity Inc. · All rights reserved.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ── THEME ── */
+const html = document.documentElement;
+const knob = document.getElementById('toggleKnob');
+if (window.matchMedia('(prefers-color-scheme:light)').matches) {
+  html.setAttribute('data-theme','light');
+  knob.textContent = '☀';
+}
+function toggleTheme() {
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  knob.textContent = isDark ? '☀' : '☽';
+}
+
+/* ── TAGLINE ROTATOR ── */
+const taglines = [
+  'Solo travel. Shared moments.',
+  'Find your people, wherever you are.',
+  'The world is full of people worth knowing.',
+  'Proximity is just the beginning.',
+  'You\'re never really alone.'
+];
+let tagIdx = 0;
+const tagEl = document.getElementById('tagline');
+function rotateTags() {
+  tagEl.style.opacity = 0;
+  setTimeout(() => {
+    tagEl.textContent = taglines[tagIdx++ % taglines.length];
+    tagEl.style.opacity = 1;
+  }, 400);
+}
+rotateTags();
+setInterval(rotateTags, 4000);
+
+/* ── PRIVACY MODAL ── */
+function openPrivacy() {
+  document.getElementById('privacyModal').style.display = 'block';
+  document.body.style.overflow = 'hidden';
+}
+function closePrivacy() {
+  document.getElementById('privacyModal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+document.getElementById('privacyModal').addEventListener('click', function(e) {
+  if (e.target === this) closePrivacy();
+});
+
+/* ── SCROLL REVEAL ── */
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>

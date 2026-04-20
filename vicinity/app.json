@@ -1,0 +1,66 @@
+{
+  "expo": {
+    "name": "Vicinity",
+    "slug": "vicinity",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0A0A0A"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.vicinity.app",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Vicinity needs your location to show nearby travelers.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Vicinity uses your location to connect you with travelers nearby."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0A0A0A"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.vicinity.app",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyCrgSd_ttD6sR2a_lRVmajfQJgOYPqBaF4"
+        }
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "scheme": "vicinity",
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow Vicinity to use your location to find travelers nearby."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Vicinity needs access to your photos to set a profile picture."
+        }
+      ],
+      "expo-notifications"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "16c1b944-1bcf-442c-aabc-f37454ec5c6b"
+      }
+    }
+  }
+}
